@@ -24,6 +24,27 @@ local default_options = {
 --- Current options (merged with defaults)
 local options = {}
 
+-- Track workspace history for "switch to previous workspace" functionality
+local last_active_workspace = nil
+local current_active_workspace = nil
+
+--- Helper to safely get the active workspace name for a window
+--- @param window table: WezTerm window object
+--- @return string|nil: active workspace name or nil
+local function get_window_active_workspace(window)
+  if not window then return nil end
+
+  -- Try window:active_workspace() if available
+  local ok, name = pcall(function() return window:active_workspace() end)
+  if ok and type(name) == "string" and name ~= "" then return name end
+
+  -- Fallback to mux.get_active_workspace()
+  local ok2, name2 = pcall(function() return mux.get_active_workspace() end)
+  if ok2 and type(name2) == "string" and name2 ~= "" then return name2 end
+
+  return nil
+end
+
 --- Expand tilde (~) in paths to home directory
 --- @param path string: Path that may contain ~
 --- @return string|nil: Expanded path or nil if home directory cannot be determined
@@ -317,6 +338,16 @@ end
 --- @param window table: WezTerm window object
 --- @param pane table: WezTerm pane object
 local function create_or_switch_workspace(item, window, pane)
+  -- update history: record current active workspace as last before switching
+  local active = get_window_active_workspace(window)
+  if active then
+    -- only update if different
+    if current_active_workspace ~= active then
+      last_active_workspace = current_active_workspace
+      current_active_workspace = active
+    end
+  end
+
   if item.type == "workspace" then
     -- just switch in case already existing workspace
     window:perform_action(
@@ -325,6 +356,12 @@ local function create_or_switch_workspace(item, window, pane)
       }),
       pane
     )
+    -- after switching, update history references
+    local new_active = item.id
+    if new_active and new_active ~= current_active_workspace then
+      last_active_workspace = current_active_workspace
+      current_active_workspace = new_active
+    end
   else
     -- For new workspaces (not existing ones), create the window first
     local cwd, err = expand_home_path(item.id)
@@ -354,6 +391,13 @@ local function create_or_switch_workspace(item, window, pane)
       }),
       pane
     )
+
+    -- after switching/creating workspace, update history
+    local new_active = item.id
+    if new_active and new_active ~= current_active_workspace then
+      last_active_workspace = current_active_workspace
+      current_active_workspace = new_active
+    end
 
     -- Create tabs and panes if configured
     if item.tabs and #item.tabs > 0 then create_tabs_with_panes(new_window, item.tabs) end
@@ -423,6 +467,43 @@ function M.switch_workspace_action()
   end)
 end
 
+--- Switch to previously active workspace
+--- @return table: WezTerm action callback
+function M.switch_to_previous_workspace()
+  return wezterm.action_callback(function(window, pane)
+    if not last_active_workspace or last_active_workspace == "" then
+      wezterm.log_info("No previously active workspace recorded")
+      return
+    end
+
+    -- Find matching choice among all known workspaces; if not found, treat as name
+    local choices = get_all_workspace_choices()
+    local found = nil
+    for _, choice in ipairs(choices) do
+      if choice.id == last_active_workspace then
+        found = choice
+        break
+      end
+    end
+
+    if found then
+      create_or_switch_workspace(found, window, pane)
+    else
+      -- If choice isn't found, attempt a direct switch by name
+      window:perform_action(
+        act.SwitchToWorkspace({ name = last_active_workspace }),
+        pane
+      )
+      -- update history after switch
+      local new_active = last_active_workspace
+      if new_active and new_active ~= current_active_workspace then
+        last_active_workspace = current_active_workspace
+        current_active_workspace = new_active
+      end
+    end
+  end)
+end
+
 --- Validate a single workspace configuration entry
 --- @param entry table: Configuration entry to validate
 --- @return boolean: True if valid
@@ -474,6 +555,9 @@ function M.setup(config, opts)
       end
     end
   end
+
+  -- initialize current active workspace if available
+  current_active_workspace = get_window_active_workspace(wezterm.gui and wezterm.gui.get_window and wezterm.gui.get_window() or nil) or mux.get_active_workspace()
 end
 
 --- @param config table: WezTerm configuration table
