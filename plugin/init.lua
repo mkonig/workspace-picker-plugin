@@ -380,7 +380,7 @@ end
 
 --- Create the workspace switcher action
 --- @return table: WezTerm action callback
-local function switch_workspace_action()
+function M.switch_workspace_action()
   return wezterm.action_callback(function(window, pane)
     local choices = get_all_workspace_choices()
 
@@ -476,17 +476,8 @@ function M.setup(config, opts)
   end
 end
 
---- Apply default keybindings to WezTerm configuration
 --- @param config table: WezTerm configuration table
---- @param key string|nil: Key to bind (default: "f")
---- @param mods string|nil: Modifiers for keybinding (default: "LEADER")
-function M.apply_to_config(config, key, mods)
-  config.keys = config.keys or {}
-  table.insert(config.keys, {
-    key = key or "f",
-    mods = mods or "LEADER",
-    action = switch_workspace_action(),
-  })
+function M.apply_to_config(config)
 end
 
 return M
