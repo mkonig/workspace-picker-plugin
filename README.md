@@ -32,6 +32,20 @@ local workspace_picker = wezterm.plugin.require("https://github.com/bugii/worksp
 workspace_picker.setup({
   { path = "~/projects/my-project", type = "directory" },
   { path = "~/projects/worktrees", type = "worktreeroot" },
+}, {
+  -- Optional: customize icons and colors
+  icons = {
+    directory = "📁",
+    worktree = "🌳",
+    zoxide = "⚡",
+    workspace = "🖥️",
+  },
+  colors = {
+    directory = "#61afef",   -- Blue
+    worktree = "#98c379",    -- Green
+    zoxide = "#e5c07b",      -- Yellow
+    workspace = "#c678dd",   -- Purple
+  }
 })
 
 -- Apply default keybinding (LEADER + f)
@@ -80,11 +94,14 @@ workspace_picker.setup({
     worktree = "🌳",
     zoxide = "⚡",
     workspace = "🖥️",
+  },
+  colors = {
+    directory = "#61afef",   -- Blue
+    worktree = "#98c379",    -- Green
+    zoxide = "#e5c07b",      -- Yellow
+    workspace = "#c678dd",   -- Purple
   }
 })
-
--- Apply to config with custom keybinding
-workspace_picker.apply_to_config(config, "f", "CTRL")
 ```
 
 ### Direct Workspace Switching
@@ -119,6 +136,18 @@ config.keys = {
 | `name`      | string | No       | Tab title                                                                      |
 | `direction` | string | No       | Split direction of (child) panes: `"Right"` or `"Bottom"` (default: `"Right"`) |
 | `panes`     | table  | No       | Array of pane configurations                                                   |
+
+### Color Configuration
+
+You can customize the colors used for different workspace types in the picker:
+
+| Field         | Type   | Required | Description                                                                        |
+| ------------- | ------ | -------- | ---------------------------------------------------------------------------------- |
+| `colors`      | table  | No       | Object mapping workspace types to hex color strings                                |
+| `colors.directory` | string | No       | Color for directory workspaces (default: `"#61afef"` - blue)                      |
+| `colors.worktree`  | string | No       | Color for git worktree workspaces (default: `"#98c379"` - green)                 |
+| `colors.zoxide`    | string | No       | Color for zoxide directory workspaces (default: `"#e5c07b"` - yellow)            |
+| `colors.workspace` | string | No       | Color for existing Wezterm workspaces (default: `"#c678dd"` - purple)            |
 
 ### Pane Configuration
 

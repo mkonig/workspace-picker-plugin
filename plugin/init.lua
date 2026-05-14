@@ -19,6 +19,13 @@ local default_options = {
     zoxide = "⚡",
     workspace = "🖥️",
   },
+  --- Default colors for different workspace types
+  colors = {
+    directory = "#61afef",  -- Blue
+    worktree = "#98c379",   -- Green
+    zoxide = "#e5c07b",     -- Yellow
+    workspace = "#c678dd",  -- Purple
+  },
 }
 
 --- Current options (merged with defaults)
@@ -83,10 +90,20 @@ end
 --- Create a formatted label for a workspace entry
 --- @param path string: Path to format
 --- @param icon string: Icon to use
+--- @param workspace_type string: Type of workspace (directory, worktree, zoxide, workspace)
 --- @return table: WezTerm formatted text
-local function format_workspace_label(path, icon)
+local function format_workspace_label(path, icon, workspace_type)
   local display_path = path:gsub(wezterm.home_dir or "", "~")
-  return wezterm.format({ { Text = icon .. "  " .. display_path } })
+  
+  -- Get color from options, fallback to defaults, then to light gray
+  local color = options.colors and options.colors[workspace_type] 
+                or default_options.colors[workspace_type] 
+                or "#abb2bf"
+  
+  return wezterm.format({
+    { Foreground = { Color = color } },
+    { Text = icon .. "  " .. display_path }
+  })
 end
 
 --- Get static and worktree-based workspace entries from user configuration
@@ -109,12 +126,12 @@ local function get_config_entries()
             if line:match("^worktree ") then
               local worktree_path = line:match("^worktree (.+)$")
               if worktree_path and worktree_path ~= expanded_path then
-                table.insert(entries, {
-                  id = worktree_path,
-                  label = format_workspace_label(worktree_path, options.icons.worktree),
-                  type = "worktree",
-                  tabs = entry.tabs,
-                })
+                 table.insert(entries, {
+                   id = worktree_path,
+                   label = format_workspace_label(worktree_path, options.icons.worktree, "worktree"),
+                   type = "worktree",
+                   tabs = entry.tabs,
+                 })
               end
             end
           end
@@ -126,12 +143,12 @@ local function get_config_entries()
       if not expanded_path then
         wezterm.log_error("Failed to expand path '" .. entry.path .. "': " .. (err or "unknown error"))
       else
-        table.insert(entries, {
-          id = expanded_path,
-          label = format_workspace_label(expanded_path, options.icons.directory),
-          type = "directory",
-          tabs = entry.tabs,
-        })
+         table.insert(entries, {
+           id = expanded_path,
+           label = format_workspace_label(expanded_path, options.icons.directory, "directory"),
+           type = "directory",
+           tabs = entry.tabs,
+         })
       end
     end
   end
@@ -152,12 +169,12 @@ local function get_zoxide_sessions()
 
   for line in output:gmatch("[^\r\n]+") do
     if line and line ~= "" then
-      table.insert(sessions, {
-        id = line,
-        label = format_workspace_label(line, options.icons.zoxide),
-        type = "zoxide",
-        tabs = nil,
-      })
+       table.insert(sessions, {
+         id = line,
+         label = format_workspace_label(line, options.icons.zoxide, "zoxide"),
+         type = "zoxide",
+         tabs = nil,
+       })
     end
   end
 
@@ -171,12 +188,12 @@ local function get_existing_workspaces()
   local names = mux.get_workspace_names()
 
   for _, name in ipairs(names or {}) do
-    table.insert(workspaces, {
-      id = name,
-      label = format_workspace_label(name, options.icons.workspace),
-      type = "workspace",
-      tabs = nil,
-    })
+     table.insert(workspaces, {
+       id = name,
+       label = format_workspace_label(name, options.icons.workspace, "workspace"),
+       type = "workspace",
+       tabs = nil,
+     })
   end
 
   return workspaces
