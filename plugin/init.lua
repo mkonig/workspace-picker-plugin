@@ -94,12 +94,12 @@ end
 --- @return table: WezTerm formatted text
 local function format_workspace_label(path, icon, workspace_type)
   local display_path = path:gsub(wezterm.home_dir or "", "~")
-  
+
   -- Get color from options, fallback to defaults, then to light gray
-  local color = options.colors and options.colors[workspace_type] 
-                or default_options.colors[workspace_type] 
+  local color = options.colors and options.colors[workspace_type]
+                or default_options.colors[workspace_type]
                 or "#abb2bf"
-  
+
   return wezterm.format({
     { Foreground = { Color = color } },
     { Text = icon .. "  " .. display_path }
@@ -458,7 +458,7 @@ function M.switch_workspace_action()
       act.InputSelector({
         title = "Select Workspace",
         choices = selector_choices,
-        fuzzy = true,
+        fuzzy = false,
         action = wezterm.action_callback(function(win, p, id)
           if not id then return end
 
