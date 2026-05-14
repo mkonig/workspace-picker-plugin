@@ -26,6 +26,8 @@ local default_options = {
     zoxide = "#e5c07b",     -- Yellow
     workspace = "#c678dd",  -- Purple
   },
+  --- Whether to use fuzzy matching in the workspace selector
+  fuzzy = true,
 }
 
 --- Current options (merged with defaults)
@@ -458,7 +460,7 @@ function M.switch_workspace_action()
       act.InputSelector({
         title = "Select Workspace",
         choices = selector_choices,
-        fuzzy = false,
+        fuzzy = options.fuzzy,
         action = wezterm.action_callback(function(win, p, id)
           if not id then return end
 

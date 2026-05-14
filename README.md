@@ -33,7 +33,7 @@ workspace_picker.setup({
   { path = "~/projects/my-project", type = "directory" },
   { path = "~/projects/worktrees", type = "worktreeroot" },
 }, {
-  -- Optional: customize icons and colors
+  -- Optional: customize icons, colors, and fuzzy matching
   icons = {
     directory = "📁",
     worktree = "🌳",
@@ -45,7 +45,8 @@ workspace_picker.setup({
     worktree = "#98c379",    -- Green
     zoxide = "#e5c07b",      -- Yellow
     workspace = "#c678dd",   -- Purple
-  }
+  },
+  fuzzy = true,              -- Enable/disable fuzzy matching (default: true)
 })
 
 -- Apply default keybinding (LEADER + f)
@@ -100,7 +101,8 @@ workspace_picker.setup({
     worktree = "#98c379",    -- Green
     zoxide = "#e5c07b",      -- Yellow
     workspace = "#c678dd",   -- Purple
-  }
+  },
+  fuzzy = true,              -- Enable/disable fuzzy matching (default: true)
 })
 ```
 
@@ -148,6 +150,14 @@ You can customize the colors used for different workspace types in the picker:
 | `colors.worktree`  | string | No       | Color for git worktree workspaces (default: `"#98c379"` - green)                 |
 | `colors.zoxide`    | string | No       | Color for zoxide directory workspaces (default: `"#e5c07b"` - yellow)            |
 | `colors.workspace` | string | No       | Color for existing Wezterm workspaces (default: `"#c678dd"` - purple)            |
+
+### Fuzzy Search Configuration
+
+You can enable or disable fuzzy matching in the workspace selector:
+
+| Field   | Type    | Required | Description                                                                        |
+| ------- | ------- | -------- | ---------------------------------------------------------------------------------- |
+| `fuzzy` | boolean | No       | Enable/disable fuzzy matching in workspace selector (default: `true`)            |
 
 ### Pane Configuration
 
