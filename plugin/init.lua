@@ -223,6 +223,31 @@ local function get_all_workspace_choices()
   add_unique_items(get_config_entries())
   add_unique_items(get_zoxide_sessions())
 
+  -- When fuzzy mode is enabled, move current workspace to top and previous to second
+  if options.fuzzy then
+    local current_item = nil
+    local previous_item = nil
+
+    for _, item in ipairs(all_items) do
+      if current_active_workspace and item.id == current_active_workspace then
+        current_item = item
+      elseif last_active_workspace and item.id == last_active_workspace then
+        previous_item = item
+      end
+    end
+
+    local reordered = {}
+    if current_item then table.insert(reordered, current_item) end
+    if previous_item then table.insert(reordered, previous_item) end
+    for _, item in ipairs(all_items) do
+      if (not current_item or item.id ~= current_item.id) and
+         (not previous_item or item.id ~= previous_item.id) then
+        table.insert(reordered, item)
+      end
+    end
+    return reordered
+  end
+
   return all_items
 end
 
