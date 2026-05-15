@@ -28,6 +28,9 @@ local default_options = {
   },
   --- Whether to use fuzzy matching in the workspace selector
   fuzzy = true,
+  --- Sort order in fuzzy mode: "current_first" (current at top, previous second),
+  --- "previous_first" (previous at top, current second), or "none" (no reordering)
+  fuzzy_sort = "previous_first",
 }
 
 --- Current options (merged with defaults)
@@ -223,8 +226,8 @@ local function get_all_workspace_choices()
   add_unique_items(get_config_entries())
   add_unique_items(get_zoxide_sessions())
 
-  -- When fuzzy mode is enabled, move current workspace to top and previous to second
-  if options.fuzzy then
+  -- When fuzzy mode is enabled, optionally reorder current/previous workspace
+  if options.fuzzy and options.fuzzy_sort ~= "none" then
     local current_item = nil
     local previous_item = nil
 
@@ -236,12 +239,19 @@ local function get_all_workspace_choices()
       end
     end
 
+    local first, second
+    if options.fuzzy_sort == "previous_first" then
+      first, second = previous_item, current_item
+    else
+      first, second = current_item, previous_item
+    end
+
     local reordered = {}
-    if current_item then table.insert(reordered, current_item) end
-    if previous_item then table.insert(reordered, previous_item) end
+    if first then table.insert(reordered, first) end
+    if second then table.insert(reordered, second) end
     for _, item in ipairs(all_items) do
-      if (not current_item or item.id ~= current_item.id) and
-         (not previous_item or item.id ~= previous_item.id) then
+      if (not first or item.id ~= first.id) and
+         (not second or item.id ~= second.id) then
         table.insert(reordered, item)
       end
     end
