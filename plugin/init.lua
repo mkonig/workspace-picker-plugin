@@ -232,9 +232,9 @@ local function get_all_workspace_choices()
     local previous_item = nil
 
     for _, item in ipairs(all_items) do
-      if current_active_workspace and item.id == current_active_workspace then
+      if current_active_workspace and item.id == current_active_workspace and item.type == "workspace" then
         current_item = item
-      elseif last_active_workspace and item.id == last_active_workspace then
+      elseif last_active_workspace and item.id == last_active_workspace and item.type == "workspace" then
         previous_item = item
       end
     end
