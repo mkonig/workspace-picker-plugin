@@ -47,6 +47,7 @@ workspace_picker.setup({
     workspace = "#c678dd",   -- Purple
   },
   fuzzy = true,              -- Enable/disable fuzzy matching (default: true)
+  fuzzy_sort = "previous_first",
 })
 
 -- Apply default keybinding (LEADER + f)
@@ -103,6 +104,7 @@ workspace_picker.setup({
     workspace = "#c678dd",   -- Purple
   },
   fuzzy = true,              -- Enable/disable fuzzy matching (default: true)
+  fuzzy_sort = "previous_first",
 })
 ```
 
