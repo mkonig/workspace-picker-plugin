@@ -153,11 +153,17 @@ You can customize the colors used for different workspace types in the picker:
 
 ### Fuzzy Search Configuration
 
-You can enable or disable fuzzy matching in the workspace selector. When fuzzy mode is enabled, the workspace list is reordered so that the current workspace appears at the top and the previously active workspace appears second, making them faster to access. When fuzzy mode is disabled, the original order is preserved.
+You can enable or disable fuzzy matching in the workspace selector. When fuzzy mode is enabled, the workspace list can be optionally reordered to prioritize the current and previous workspaces.
 
-| Field   | Type    | Required | Description                                                                        |
-| ------- | ------- | -------- | ---------------------------------------------------------------------------------- |
-| `fuzzy` | boolean | No       | Enable/disable fuzzy matching and workspace reordering (default: `true`)          |
+| Field         | Type    | Required | Description                                                                        |
+| ------------- | ------- | -------- | ---------------------------------------------------------------------------------- |
+| `fuzzy`       | boolean | No       | Enable/disable fuzzy matching and workspace reordering (default: `true`)          |
+| `fuzzy_sort`  | string  | No       | Sort order in fuzzy mode: `"previous_first"`, `"current_first"`, or `"none"` (default: `"previous_first"`) |
+
+**`fuzzy_sort` values:**
+- `"previous_first"` — Previous active workspace at top, current second
+- `"current_first"` — Current workspace at top, previous second
+- `"none"` — No reordering (original priority order preserved)
 
 ### Pane Configuration
 
