@@ -21,10 +21,10 @@ local default_options = {
   },
   --- Default colors for different workspace types
   colors = {
-    directory = "#61afef",  -- Blue
-    worktree = "#98c379",   -- Green
-    zoxide = "#e5c07b",     -- Yellow
-    workspace = "#c678dd",  -- Purple
+    directory = "#61afef", -- Blue
+    worktree = "#98c379", -- Green
+    zoxide = "#e5c07b", -- Yellow
+    workspace = "#c678dd", -- Purple
   },
   --- Whether to use fuzzy matching in the workspace selector
   fuzzy = true,
@@ -44,15 +44,25 @@ local current_active_workspace = nil
 --- @param window table: WezTerm window object
 --- @return string|nil: active workspace name or nil
 local function get_window_active_workspace(window)
-  if not window then return nil end
+  if not window then
+    return nil
+  end
 
   -- Try window:active_workspace() if available
-  local ok, name = pcall(function() return window:active_workspace() end)
-  if ok and type(name) == "string" and name ~= "" then return name end
+  local ok, name = pcall(function()
+    return window:active_workspace()
+  end)
+  if ok and type(name) == "string" and name ~= "" then
+    return name
+  end
 
   -- Fallback to mux.get_active_workspace()
-  local ok2, name2 = pcall(function() return mux.get_active_workspace() end)
-  if ok2 and type(name2) == "string" and name2 ~= "" then return name2 end
+  local ok2, name2 = pcall(function()
+    return mux.get_active_workspace()
+  end)
+  if ok2 and type(name2) == "string" and name2 ~= "" then
+    return name2
+  end
 
   return nil
 end
@@ -62,11 +72,15 @@ end
 --- @return string|nil: Expanded path or nil if home directory cannot be determined
 --- @return string|nil: Error message if expansion fails
 local function expand_home_path(path)
-  if not path or type(path) ~= "string" then return nil, "Invalid path: expected string" end
+  if not path or type(path) ~= "string" then
+    return nil, "Invalid path: expected string"
+  end
 
   if path:sub(1, 1) == "~" then
     local home = wezterm.home_dir
-    if not home then return nil, "Unable to determine home directory" end
+    if not home then
+      return nil, "Unable to determine home directory"
+    end
     path = home .. path:sub(2)
   end
   return path, nil
@@ -77,10 +91,14 @@ end
 --- @return string: Command output (empty string on error)
 --- @return string|nil: Error message if command failed
 local function run_command(cmd)
-  if not cmd or type(cmd) ~= "string" then return "", "Invalid command: expected string" end
+  if not cmd or type(cmd) ~= "string" then
+    return "", "Invalid command: expected string"
+  end
 
   local args = { os.getenv("SHELL"), "-l", "-c", cmd }
-  if is_windows then args = { "cmd", "/c", cmd } end
+  if is_windows then
+    args = { "cmd", "/c", cmd }
+  end
 
   local ok, stdout, stderr = wezterm.run_child_process(args)
   if not ok then
@@ -102,12 +120,12 @@ local function format_workspace_label(path, icon, workspace_type)
 
   -- Get color from options, fallback to defaults, then to light gray
   local color = options.colors and options.colors[workspace_type]
-                or default_options.colors[workspace_type]
-                or "#abb2bf"
+    or default_options.colors[workspace_type]
+    or "#abb2bf"
 
   return wezterm.format({
     { Foreground = { Color = color } },
-    { Text = icon .. "  " .. display_path }
+    { Text = icon .. "  " .. display_path },
   })
 end
 
@@ -121,9 +139,12 @@ local function get_config_entries()
       -- Handle git worktree root
       local expanded_path, err = expand_home_path(entry.path)
       if not expanded_path then
-        wezterm.log_error("Failed to expand worktree path '" .. entry.path .. "': " .. (err or "unknown error"))
+        wezterm.log_error(
+          "Failed to expand worktree path '" .. entry.path .. "': " .. (err or "unknown error")
+        )
       else
-        local output, cmd_err = run_command("git -C " .. expanded_path .. " worktree list --porcelain")
+        local output, cmd_err =
+          run_command("git -C " .. expanded_path .. " worktree list --porcelain")
         if cmd_err then
           wezterm.log_error("Failed to get worktrees for '" .. expanded_path .. "': " .. cmd_err)
         else
@@ -131,12 +152,12 @@ local function get_config_entries()
             if line:match("^worktree ") then
               local worktree_path = line:match("^worktree (.+)$")
               if worktree_path and worktree_path ~= expanded_path then
-                 table.insert(entries, {
-                   id = worktree_path,
-                   label = format_workspace_label(worktree_path, options.icons.worktree, "worktree"),
-                   type = "worktree",
-                   tabs = entry.tabs,
-                 })
+                table.insert(entries, {
+                  id = worktree_path,
+                  label = format_workspace_label(worktree_path, options.icons.worktree, "worktree"),
+                  type = "worktree",
+                  tabs = entry.tabs,
+                })
               end
             end
           end
@@ -146,14 +167,16 @@ local function get_config_entries()
       -- Handle static directory entry
       local expanded_path, err = expand_home_path(entry.path)
       if not expanded_path then
-        wezterm.log_error("Failed to expand path '" .. entry.path .. "': " .. (err or "unknown error"))
+        wezterm.log_error(
+          "Failed to expand path '" .. entry.path .. "': " .. (err or "unknown error")
+        )
       else
-         table.insert(entries, {
-           id = expanded_path,
-           label = format_workspace_label(expanded_path, options.icons.directory, "directory"),
-           type = "directory",
-           tabs = entry.tabs,
-         })
+        table.insert(entries, {
+          id = expanded_path,
+          label = format_workspace_label(expanded_path, options.icons.directory, "directory"),
+          type = "directory",
+          tabs = entry.tabs,
+        })
       end
     end
   end
@@ -174,12 +197,12 @@ local function get_zoxide_sessions()
 
   for line in output:gmatch("[^\r\n]+") do
     if line and line ~= "" then
-       table.insert(sessions, {
-         id = line,
-         label = format_workspace_label(line, options.icons.zoxide, "zoxide"),
-         type = "zoxide",
-         tabs = nil,
-       })
+      table.insert(sessions, {
+        id = line,
+        label = format_workspace_label(line, options.icons.zoxide, "zoxide"),
+        type = "zoxide",
+        tabs = nil,
+      })
     end
   end
 
@@ -193,12 +216,12 @@ local function get_existing_workspaces()
   local names = mux.get_workspace_names()
 
   for _, name in ipairs(names or {}) do
-     table.insert(workspaces, {
-       id = name,
-       label = format_workspace_label(name, options.icons.workspace, "workspace"),
-       type = "workspace",
-       tabs = nil,
-     })
+    table.insert(workspaces, {
+      id = name,
+      label = format_workspace_label(name, options.icons.workspace, "workspace"),
+      type = "workspace",
+      tabs = nil,
+    })
   end
 
   return workspaces
@@ -232,9 +255,17 @@ local function get_all_workspace_choices()
     local previous_item = nil
 
     for _, item in ipairs(all_items) do
-      if current_active_workspace and item.id == current_active_workspace and item.type == "workspace" then
+      if
+        current_active_workspace
+        and item.id == current_active_workspace
+        and item.type == "workspace"
+      then
         current_item = item
-      elseif last_active_workspace and item.id == last_active_workspace and item.type == "workspace" then
+      elseif
+        last_active_workspace
+        and item.id == last_active_workspace
+        and item.type == "workspace"
+      then
         previous_item = item
       end
     end
@@ -247,11 +278,14 @@ local function get_all_workspace_choices()
     end
 
     local reordered = {}
-    if first then table.insert(reordered, first) end
-    if second then table.insert(reordered, second) end
+    if first then
+      table.insert(reordered, first)
+    end
+    if second then
+      table.insert(reordered, second)
+    end
     for _, item in ipairs(all_items) do
-      if (not first or item.id ~= first.id) and
-         (not second or item.id ~= second.id) then
+      if (not first or item.id ~= first.id) and (not second or item.id ~= second.id) then
         table.insert(reordered, item)
       end
     end
@@ -267,14 +301,18 @@ end
 --- @param panes table
 --- @return table: size values for successive split calls
 local function compute_split_sizes(panes)
-  if not panes or #panes < 2 then return {} end
+  if not panes or #panes < 2 then
+    return {}
+  end
 
   local weights = {}
   local total = 0
   for i, p in ipairs(panes) do
     local w = p.size
     if type(w) ~= "number" or w <= 0 then
-      if w ~= nil then wezterm.log_error("Invalid pane size (must be positive number weight): index " .. i) end
+      if w ~= nil then
+        wezterm.log_error("Invalid pane size (must be positive number weight): index " .. i)
+      end
       w = 1
     end
     weights[i] = w
@@ -309,7 +347,9 @@ end
 local function create_pane_splits(mux_pane, node)
   -- Base case: leaf node with optional command
   if not node or not node.panes or #node.panes == 0 then
-    if node and node.command then mux_pane:send_text(node.command .. "\r") end
+    if node and node.command then
+      mux_pane:send_text(node.command .. "\r")
+    end
     return
   end
 
@@ -392,10 +432,8 @@ end
 --- @param window table: WezTerm window object
 --- @param pane table: WezTerm pane object
 local function create_or_switch_workspace(item, window, pane)
-  -- update history: record current active workspace as last before switching
   local active = get_window_active_workspace(window)
   if active then
-    -- only update if different
     if current_active_workspace ~= active then
       last_active_workspace = current_active_workspace
       current_active_workspace = active
@@ -403,39 +441,24 @@ local function create_or_switch_workspace(item, window, pane)
   end
 
   if item.type == "workspace" then
-    -- just switch in case already existing workspace
     window:perform_action(
       act.SwitchToWorkspace({
         name = item.id,
       }),
       pane
     )
-    -- after switching, update history references
     local new_active = item.id
     if new_active and new_active ~= current_active_workspace then
       last_active_workspace = current_active_workspace
       current_active_workspace = new_active
     end
   else
-    -- For new workspaces (not existing ones), create the window first
     local cwd, err = expand_home_path(item.id)
     if err then
       wezterm.log_error("Failed to expand workspace path '" .. item.id .. "': " .. err)
       cwd = item.id -- fallback to original path
     end
 
-    local _, _, new_window = mux.spawn_window({
-      workspace = item.id,
-      cwd = cwd,
-    })
-
-    if not new_window then
-      wezterm.log_error("Failed to create workspace window for '" .. item.id .. "'")
-      return
-    end
-
-    -- Switch to the workspace
-    -- NOTE: has to be done before creating panes due to sizing information i guess
     window:perform_action(
       act.SwitchToWorkspace({
         name = item.id,
@@ -446,15 +469,15 @@ local function create_or_switch_workspace(item, window, pane)
       pane
     )
 
-    -- after switching/creating workspace, update history
     local new_active = item.id
     if new_active and new_active ~= current_active_workspace then
       last_active_workspace = current_active_workspace
       current_active_workspace = new_active
     end
 
-    -- Create tabs and panes if configured
-    if item.tabs and #item.tabs > 0 then create_tabs_with_panes(new_window, item.tabs) end
+    if item.tabs and #item.tabs > 0 then
+      create_tabs_with_panes(new_window, item.tabs)
+    end
   end
 end
 
@@ -496,8 +519,10 @@ function M.switch_workspace_action()
         title = "Select Workspace",
         choices = selector_choices,
         fuzzy = options.fuzzy,
-        action = wezterm.action_callback(function(win, p, id)
-          if not id then return end
+        action = wezterm.action_callback(function(win, p, id, label)
+          if not id then
+            return
+          end
 
           -- Find the selected item
           local selected_item = nil
@@ -507,6 +532,7 @@ function M.switch_workspace_action()
               break
             end
           end
+          wezterm.log_info("Selected workspace: " .. selected_item.id)
 
           if not selected_item then
             wezterm.log_error("Selected workspace not found: " .. id)
@@ -544,10 +570,7 @@ function M.switch_to_previous_workspace()
       create_or_switch_workspace(found, window, pane)
     else
       -- If choice isn't found, attempt a direct switch by name
-      window:perform_action(
-        act.SwitchToWorkspace({ name = last_active_workspace }),
-        pane
-      )
+      window:perform_action(act.SwitchToWorkspace({ name = last_active_workspace }), pane)
       -- update history after switch
       local new_active = last_active_workspace
       if new_active and new_active ~= current_active_workspace then
@@ -563,15 +586,21 @@ end
 --- @return boolean: True if valid
 --- @return string|nil: Error message if invalid
 local function validate_config_entry(entry)
-  if type(entry) ~= "table" then return false, "Configuration entry must be a table" end
+  if type(entry) ~= "table" then
+    return false, "Configuration entry must be a table"
+  end
 
-  if not entry.path then return false, "'path' is required for each workspace entry" end
+  if not entry.path then
+    return false, "'path' is required for each workspace entry"
+  end
 
   if entry.type and entry.type ~= "directory" and entry.type ~= "worktreeroot" then
     return false, "Invalid type '" .. entry.type .. "'. Must be 'directory' or 'worktreeroot'"
   end
 
-  if entry.tabs and type(entry.tabs) ~= "table" then return false, "'tabs' must be a table if provided" end
+  if entry.tabs and type(entry.tabs) ~= "table" then
+    return false, "'tabs' must be a table if provided"
+  end
 
   return true, nil
 end
@@ -600,10 +629,14 @@ function M.setup(config, opts)
         wezterm.log_error(string.format("Configuration entry %d: %s", i, error_msg))
       else
         -- Set default type if not specified
-        if not entry.type then entry.type = "directory" end
+        if not entry.type then
+          entry.type = "directory"
+        end
 
         -- Ensure tabs is a table
-        if not entry.tabs then entry.tabs = {} end
+        if not entry.tabs then
+          entry.tabs = {}
+        end
 
         table.insert(user_config, entry)
       end
@@ -611,11 +644,12 @@ function M.setup(config, opts)
   end
 
   -- initialize current active workspace if available
-  current_active_workspace = get_window_active_workspace(wezterm.gui and wezterm.gui.get_window and wezterm.gui.get_window() or nil) or mux.get_active_workspace()
+  current_active_workspace = get_window_active_workspace(
+    wezterm.gui and wezterm.gui.get_window and wezterm.gui.get_window() or nil
+  ) or mux.get_active_workspace()
 end
 
 --- @param config table: WezTerm configuration table
-function M.apply_to_config(config)
-end
+function M.apply_to_config(config) end
 
 return M
