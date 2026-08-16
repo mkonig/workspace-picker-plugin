@@ -231,13 +231,26 @@ end
 --- @return table: Array of workspace choice objects
 local function get_all_workspace_choices()
   local all_items = {}
-  local seen_ids = {} -- Track seen IDs to avoid duplicates
+  local seen_ids = {}
+  local config_by_id = {}
+
+  -- Build map of configured entries by ID for tab merge
+  for _, entry in ipairs(get_config_entries()) do
+    config_by_id[entry.id] = entry
+  end
 
   --- Add items to the list, skipping duplicates
   --- @param items table: Array of workspace items to add
-  local function add_unique_items(items)
+  --- @param is_existing boolean: Whether these are existing workspaces
+  local function add_unique_items(items, is_existing)
     for _, item in ipairs(items or {}) do
       if item.id and not seen_ids[item.id] then
+        -- Merge configured tabs if available
+        if config_by_id[item.id] and config_by_id[item.id].tabs then
+          item.tabs = config_by_id[item.id].tabs
+        end
+        -- Mark whether workspace currently exists
+        item.is_existing = is_existing or false
         table.insert(all_items, item)
         seen_ids[item.id] = true
       end
@@ -245,9 +258,9 @@ local function get_all_workspace_choices()
   end
 
   -- Add items in priority order (existing workspaces first, then configured, then zoxide)
-  add_unique_items(get_existing_workspaces())
-  add_unique_items(get_config_entries())
-  add_unique_items(get_zoxide_sessions())
+  add_unique_items(get_existing_workspaces(), true)
+  add_unique_items(get_config_entries(), false)
+  add_unique_items(get_zoxide_sessions(), false)
 
   -- When fuzzy mode is enabled, optionally reorder current/previous workspace
   if options.fuzzy and options.fuzzy_sort ~= "none" then
@@ -440,7 +453,8 @@ local function create_or_switch_workspace(item, window, pane)
     end
   end
 
-  if item.type == "workspace" then
+  if item.is_existing then
+    -- just switch in case already existing workspace
     window:perform_action(
       act.SwitchToWorkspace({
         name = item.id,
